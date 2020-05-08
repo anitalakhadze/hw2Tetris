@@ -13,11 +13,16 @@ public class Board	{
 	// Some ivars are stubbed out for you:
 	private int width;
 	private int height;
-	private boolean[][] grid;
+	private boolean[][] board;
 	private boolean DEBUG = true;
 	boolean committed;
 	
-	
+	int[] widths;
+	int[] heights;
+
+	boolean[][] xBoard;
+	int[] xWidths;
+	int[] xHeights;
 	// Here a few trivial methods are provided:
 	
 	/**
@@ -27,10 +32,23 @@ public class Board	{
 	public Board(int width, int height) {
 		this.width = width;
 		this.height = height;
-		grid = new boolean[width][height];
+		board = new boolean[width][height];
 		committed = true;
-		
-		// YOUR CODE HERE
+
+		heights = new int[width];
+		for (int x = 0; x < getWidth(); x++) {
+			heights[x] = getColumnHeight(x);
+		}
+
+		widths = new int[height];
+		for (int y = 0; y < getHeight(); y++){
+			widths[y] = getRowWidth(y);
+		}
+
+		xBoard = new boolean[width][height];
+		xWidths = new int[height];
+		xHeights = new int[width];
+
 	}
 	
 	
@@ -49,13 +67,17 @@ public class Board	{
 		return height;
 	}
 	
-	
+
 	/**
 	 Returns the max column height present in the board.
 	 For an empty board this is 0.
 	*/
-	public int getMaxHeight() {	 
-		return 0; // YOUR CODE HERE
+	public int getMaxHeight() {
+		int maxHeight = 0;
+		for (int i = 0; i < getWidth(); i++) {
+			maxHeight = Math.max(maxHeight, getColumnHeight(i));
+		}
+		return maxHeight;
 	}
 	
 	
@@ -65,8 +87,16 @@ public class Board	{
 	*/
 	public void sanityCheck() {
 		if (DEBUG) {
-			// YOUR CODE HERE
+			for (int x = 0; x < getWidth(); x++) {
+				if(heights[x] != getColumnHeight(x))
+					throw new RuntimeException("Height is not correct in column " + x);
+			}
+			for (int y = 0; y < getHeight(); y++){
+				if(widths[y] != getRowWidth(y))
+					throw  new RuntimeException("Width is not correct in row " + y);
+			}
 		}
+		return;
 	}
 	
 	/**
@@ -79,7 +109,12 @@ public class Board	{
 	 to compute this fast -- O(skirt length).
 	*/
 	public int dropHeight(Piece piece, int x) {
-		return 0; // YOUR CODE HERE
+		int y = 0;
+		int[] skirt = piece.getSkirt();
+		for (int i = 0; i < piece.getWidth(); i++) {
+			y = Math.max(heights[x + i] + skirt[i], y);
+		}
+		return y;
 	}
 	
 	
@@ -89,7 +124,10 @@ public class Board	{
 	 The height is 0 if the column contains no blocks.
 	*/
 	public int getColumnHeight(int x) {
-		return 0; // YOUR CODE HERE
+		for (int y = getHeight() - 1; y >= 0; y--){
+			if (board[x][y]) return y + 1;
+		}
+		return 0;
 	}
 	
 	
@@ -98,9 +136,16 @@ public class Board	{
 	 the given row.
 	*/
 	public int getRowWidth(int y) {
-		 return 0; // YOUR CODE HERE
+		int counter = 0;
+		for (int x = 0; x < getWidth(); x++){
+			if (board[x][y]) counter++;
+		}
+		return counter;
 	}
-	
+
+	private boolean inBoundary(int x, int y){
+		return (x < getWidth() && x >= 0) && (y < getHeight() && y >= 0);
+	}
 	
 	/**
 	 Returns true if the given block is filled in the board.
@@ -108,7 +153,9 @@ public class Board	{
 	 always return true.
 	*/
 	public boolean getGrid(int x, int y) {
-		return false; // YOUR CODE HERE
+		if (!inBoundary(x, y)) return true;
+		if (board[x][y]) return true;
+		return false;
 	}
 	
 	
@@ -134,26 +181,81 @@ public class Board	{
 	public int place(Piece piece, int x, int y) {
 		// flag !committed problem
 		if (!committed) throw new RuntimeException("place commit problem");
-			
-		int result = PLACE_OK;
-		
-		// YOUR CODE HERE
-		
-		return result;
+
+		TPoint[] pieceBody = piece.getBody();
+
+		for (TPoint point : pieceBody){
+			if (!inBoundary(x + point.x, y + point.y)) return PLACE_OUT_BOUNDS;
+			if (board[x + point.x][y + point.y]) return PLACE_BAD;
+		}
+
+		//make back-up preparations
+		System.arraycopy(widths,0, xWidths, 0, widths.length);
+		System.arraycopy(heights, 0, xHeights, 0, heights.length);
+		for (int row = 0; row < getWidth(); row++) {
+			System.arraycopy(board[row], 0, xBoard[row], 0, board[row].length);
+		}
+
+		boolean rowFilled = false;
+		for (TPoint point : pieceBody){
+			int newX = x + point.x;
+			int newY = y + point.y;
+			board[newX][newY] = true;
+			if(++widths[newY] == getWidth()) rowFilled = true;
+			heights[newX] = getColumnHeight(newX);
+		}
+
+		committed = false;
+		sanityCheck();
+		if(rowFilled) return PLACE_ROW_FILLED;
+		return PLACE_OK;
 	}
-	
+
+	private boolean rowIsFull(int row) {
+		for (int col = 0; col < getWidth(); col++) {
+			if(!getGrid(col, row)) return false;
+		}
+		return true;
+	}
 	
 	/**
 	 Deletes rows that are filled all the way across, moving
 	 things above down. Returns the number of rows cleared.
 	*/
 	public int clearRows() {
+		//make back-up preparations
+		System.arraycopy(widths,0, xWidths, 0, widths.length);
+		System.arraycopy(heights, 0, xHeights, 0, heights.length);
+
+		boolean[][] result = new boolean[getWidth()][getHeight()];
+		int[] shiftedWidth = new int[getHeight()];
+		int toRow = 0;
 		int rowsCleared = 0;
-		// YOUR CODE HERE
+		for (int fromRow = 0; fromRow < getMaxHeight(); fromRow++) {
+			if(!rowIsFull(fromRow)){
+				copyRow(result, fromRow, toRow);
+				shiftedWidth[toRow] = widths[fromRow];
+				toRow++;
+			} else rowsCleared++;
+		}
+
+		xBoard = board;
+		this.board = result;
+		this.widths = shiftedWidth;
+		for (int col = 0; col < heights.length; col++) {
+			heights[col] = getColumnHeight(col);
+		}
+
+		committed = false;
 		sanityCheck();
 		return rowsCleared;
 	}
 
+	private void copyRow(boolean[][] result, int fromRow, int toRow) {
+		for (int col = 0; col < getWidth(); col++) {
+			result[col][toRow] = board[col][fromRow];
+		}
+	}
 
 
 	/**
@@ -164,7 +266,20 @@ public class Board	{
 	 See the overview docs.
 	*/
 	public void undo() {
-		// YOUR CODE HERE
+		int[] tempW = widths;
+		widths = xWidths;
+		xWidths = tempW;
+
+		int[] tempH = heights;
+		heights = xHeights;
+		xHeights = tempH;
+
+		boolean[][] tempBoard = board;
+		board = xBoard;
+		xBoard = tempBoard;
+
+		committed = true;
+		sanityCheck();
 	}
 	
 	
@@ -175,8 +290,6 @@ public class Board	{
 		committed = true;
 	}
 
-
-	
 	/*
 	 Renders the board state as a big String, suitable for printing.
 	 This is the sort of print-obj-state utility that can help see complex
@@ -193,7 +306,8 @@ public class Board	{
 			}
 			buff.append("|\n");
 		}
-		for (int x=0; x<width+2; x++) buff.append('-');
+		for (int x=0; x<width+2; x++)
+			buff.append('-');
 		return(buff.toString());
 	}
 }
