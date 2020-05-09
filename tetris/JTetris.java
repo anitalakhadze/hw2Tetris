@@ -93,6 +93,8 @@ public class JTetris extends JComponent {
 	protected JCheckBox testButton;
 	
 	public final int DELAY = 400;	// milliseconds per tick
+
+	private boolean hasLanded = false;
 	
 	/**
 	 * Creates a new JTetris where each tetris square
@@ -235,7 +237,7 @@ public class JTetris extends JComponent {
 	 Sets the enabling of the start/stop buttons
 	 based on the gameOn state.
 	*/
-	private void enableButtons() {
+	void enableButtons() {
 		startButton.setEnabled(!gameOn);
 		stopButton.setEnabled(gameOn);
 	}
@@ -434,7 +436,7 @@ public class JTetris extends JComponent {
 		if (result ==  Board.PLACE_ROW_FILLED) {
 			repaint();
 		}
-		
+
 
 		boolean failed = (result >= Board.PLACE_OUT_BOUNDS);
 		
@@ -452,7 +454,6 @@ public class JTetris extends JComponent {
 		 "landed" position, so we're done with the falling of this piece.
 		*/
 		if (failed && verb==DOWN && !moved) {	// it's landed
-		
 			int cleared = board.clearRows();
 			if (cleared > 0) {
 				// score goes up by 5, 10, 20, 40 for row clearing
@@ -475,6 +476,7 @@ public class JTetris extends JComponent {
 			}
 			// Otherwise add a new piece and keep playing
 			else {
+				hasLanded = false;
 				addNewPiece();
 			}
 		}

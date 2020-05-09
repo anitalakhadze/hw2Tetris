@@ -35,19 +35,21 @@ public class Board	{
 		board = new boolean[width][height];
 		committed = true;
 
+		xBoard = new boolean[width][height];
+		xWidths = new int[height];
+		xHeights = new int[width];
+
 		heights = new int[width];
 		for (int x = 0; x < getWidth(); x++) {
 			heights[x] = getColumnHeight(x);
+			xHeights[x] = getColumnHeight(x);
 		}
 
 		widths = new int[height];
 		for (int y = 0; y < getHeight(); y++){
 			widths[y] = getRowWidth(y);
+			xWidths[y] = getRowWidth(y);
 		}
-
-		xBoard = new boolean[width][height];
-		xWidths = new int[height];
-		xHeights = new int[width];
 
 	}
 	
@@ -114,6 +116,7 @@ public class Board	{
 		for (int i = 0; i < piece.getWidth(); i++) {
 			y = Math.max(heights[x + i] + skirt[i], y);
 		}
+
 		return y;
 	}
 	
@@ -186,15 +189,9 @@ public class Board	{
 
 		for (TPoint point : pieceBody){
 			if (!inBoundary(x + point.x, y + point.y)) return PLACE_OUT_BOUNDS;
-			if (board[x + point.x][y + point.y]) return PLACE_BAD;
+			if (xBoard[x + point.x][y + point.y]) return PLACE_BAD;
 		}
 
-		//make back-up preparations
-		System.arraycopy(widths,0, xWidths, 0, widths.length);
-		System.arraycopy(heights, 0, xHeights, 0, heights.length);
-		for (int row = 0; row < getWidth(); row++) {
-			System.arraycopy(board[row], 0, xBoard[row], 0, board[row].length);
-		}
 
 		boolean rowFilled = false;
 		for (TPoint point : pieceBody){
@@ -224,8 +221,8 @@ public class Board	{
 	*/
 	public int clearRows() {
 		//make back-up preparations
-		System.arraycopy(widths,0, xWidths, 0, widths.length);
-		System.arraycopy(heights, 0, xHeights, 0, heights.length);
+//		System.arraycopy(widths,0, xWidths, 0, widths.length);
+//		System.arraycopy(heights, 0, xHeights, 0, heights.length);
 
 		boolean[][] result = new boolean[getWidth()][getHeight()];
 		int[] shiftedWidth = new int[getHeight()];
@@ -239,7 +236,6 @@ public class Board	{
 			} else rowsCleared++;
 		}
 
-		xBoard = board;
 		this.board = result;
 		this.widths = shiftedWidth;
 		for (int col = 0; col < heights.length; col++) {
@@ -266,28 +262,39 @@ public class Board	{
 	 See the overview docs.
 	*/
 	public void undo() {
-		int[] tempW = widths;
-		widths = xWidths;
-		xWidths = tempW;
-
-		int[] tempH = heights;
-		heights = xHeights;
-		xHeights = tempH;
-
-		boolean[][] tempBoard = board;
-		board = xBoard;
-		xBoard = tempBoard;
+		restore(xBoard, board, xWidths, widths, xHeights, heights);
 
 		committed = true;
 		sanityCheck();
 	}
-	
-	
+
+	private void backup(boolean[][] srcBoard, boolean[][] dstBoard,
+						int[] srcWidths, int[]dstWidths,
+						int[] srcHeights, int[] dstHeights){
+		for (int row = 0; row < getWidth(); row++) {
+			System.arraycopy(srcBoard[row], 0, dstBoard[row], 0, srcBoard[row].length);
+		}
+		System.arraycopy(srcWidths, 0, dstWidths, 0, srcWidths.length);
+		System.arraycopy(srcHeights, 0, dstHeights, 0, srcHeights.length);
+	}
+
+	private void restore(boolean[][] srcBoard, boolean[][] dstBoard,
+						 int[] srcWidths, int[]dstWidths,
+						 int[] srcHeights, int[] dstHeights){
+		for (int row = 0; row < getWidth(); row++) {
+			System.arraycopy(srcBoard[row], 0, dstBoard[row], 0, srcBoard[row].length);
+		}
+		System.arraycopy(srcWidths, 0, dstWidths, 0, srcWidths.length);
+		System.arraycopy(srcHeights, 0, dstHeights, 0, srcHeights.length);
+	}
+
+
 	/**
 	 Puts the board in the committed state.
 	*/
 	public void commit() {
 		committed = true;
+		backup(board, xBoard, widths, xWidths, heights, xHeights);
 	}
 
 	/*

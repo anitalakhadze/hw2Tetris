@@ -132,4 +132,17 @@ public class BoardTest {
 		b.widths[1] = 2;
 		b.sanityCheck();
 	}
+
+	@Test
+	public void testDropHeightExtraCase(){
+		b.clearRows();
+		Piece stick = new Piece(Piece.STICK_STR);
+		b.commit();
+		b.place(stick, 0, 0);
+		b.commit();
+		Piece square = new Piece(Piece.SQUARE_STR);
+		b.place(square, 0, 4);
+		b.commit();
+		System.out.println(b.toString());
+	}
 }
