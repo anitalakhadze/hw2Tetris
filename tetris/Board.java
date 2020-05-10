@@ -20,6 +20,8 @@ public class Board	{
 	int[] widths;
 	int[] heights;
 
+	boolean[][] tempBoard;
+
 	boolean[][] xBoard;
 	int[] xWidths;
 	int[] xHeights;
@@ -34,6 +36,8 @@ public class Board	{
 		this.height = height;
 		board = new boolean[width][height];
 		committed = true;
+
+		tempBoard = new boolean[width][height];
 
 		xBoard = new boolean[width][height];
 		xWidths = new int[height];
@@ -220,23 +224,18 @@ public class Board	{
 	 things above down. Returns the number of rows cleared.
 	*/
 	public int clearRows() {
-		//make back-up preparations
-//		System.arraycopy(widths,0, xWidths, 0, widths.length);
-//		System.arraycopy(heights, 0, xHeights, 0, heights.length);
-
-		boolean[][] result = new boolean[getWidth()][getHeight()];
 		int[] shiftedWidth = new int[getHeight()];
 		int toRow = 0;
 		int rowsCleared = 0;
-		for (int fromRow = 0; fromRow < getMaxHeight(); fromRow++) {
+		for (int fromRow = 0; fromRow < getHeight(); fromRow++) {
 			if(!rowIsFull(fromRow)){
-				copyRow(result, fromRow, toRow);
+				copyRow(tempBoard, fromRow, toRow);
 				shiftedWidth[toRow] = widths[fromRow];
 				toRow++;
 			} else rowsCleared++;
 		}
 
-		this.board = result;
+		this.board = tempBoard;
 		this.widths = shiftedWidth;
 		for (int col = 0; col < heights.length; col++) {
 			heights[col] = getColumnHeight(col);

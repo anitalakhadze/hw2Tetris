@@ -53,7 +53,7 @@ public class JTetris extends JComponent {
 	
 	// Is drawing optimized
 	// (default false, so debugging is easier)
-	protected boolean DRAW_OPTIMIZE = false;
+	protected boolean DRAW_OPTIMIZE = true;
 	
 	// Board data structures
 	protected Board board;
@@ -93,8 +93,6 @@ public class JTetris extends JComponent {
 	protected JCheckBox testButton;
 	
 	public final int DELAY = 400;	// milliseconds per tick
-
-	private boolean hasLanded = false;
 	
 	/**
 	 * Creates a new JTetris where each tetris square
@@ -268,7 +266,7 @@ public class JTetris extends JComponent {
 	public int setCurrent(Piece piece, int x, int y) {
 		int result = board.place(piece, x, y);
 		
-		if (result <= Board.PLACE_ROW_FILLED) { // SUCESS
+		if (result <= Board.PLACE_ROW_FILLED) { // SUCCESS
 			// repaint the rect where it used to be
 			if (currentPiece != null) repaintPiece(currentPiece, currentX, currentY);
 			currentPiece = piece;
@@ -318,7 +316,7 @@ public class JTetris extends JComponent {
 		currentPiece = null;
 
 		Piece piece = pickNextPiece();
-		
+
 		// Center it up at the top
 		int px = (board.getWidth() - piece.getWidth())/2;
 		int py = board.getHeight() - piece.getHeight();
@@ -431,11 +429,11 @@ public class JTetris extends JComponent {
 		// try out the new position (rolls back if it doesn't work)
 		int result = setCurrent(newPiece, newX, newY);
 		
-		// if row clearing is going to happen, draw the
-		// whole board so the green row shows up
-		if (result ==  Board.PLACE_ROW_FILLED) {
-			repaint();
-		}
+//		// if row clearing is going to happen, draw the
+//		// whole board so the green row shows up
+//		if (result ==  Board.PLACE_ROW_FILLED) {
+//			repaint();
+//		}
 
 
 		boolean failed = (result >= Board.PLACE_OUT_BOUNDS);
@@ -454,6 +452,8 @@ public class JTetris extends JComponent {
 		 "landed" position, so we're done with the falling of this piece.
 		*/
 		if (failed && verb==DOWN && !moved) {	// it's landed
+
+			repaint();
 			int cleared = board.clearRows();
 			if (cleared > 0) {
 				// score goes up by 5, 10, 20, 40 for row clearing
@@ -476,7 +476,6 @@ public class JTetris extends JComponent {
 			}
 			// Otherwise add a new piece and keep playing
 			else {
-				hasLanded = false;
 				addNewPiece();
 			}
 		}
