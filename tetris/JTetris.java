@@ -1,14 +1,9 @@
 // JTetris.java
 package tetris;
 
-import java.awt.*;
 import javax.swing.*;
-
-import java.util.*;
-import java.awt.event.*;
-import javax.swing.event.*;
-
-import java.awt.Toolkit;
+import java.awt.*;
+import java.util.Random;
 
 
 /**
@@ -122,83 +117,42 @@ public class JTetris extends JComponent {
 		
 		// LEFT
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(LEFT);
-				}
-			}, "left", KeyStroke.getKeyStroke('4'), WHEN_IN_FOCUSED_WINDOW
-		);
+				e -> tick(LEFT), "left",
+				KeyStroke.getKeyStroke('4'), WHEN_IN_FOCUSED_WINDOW);
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(LEFT);
-				}
-			}, "left", KeyStroke.getKeyStroke('j'), WHEN_IN_FOCUSED_WINDOW
-		);
-		
+				e -> tick(LEFT), "left",
+				KeyStroke.getKeyStroke('j'), WHEN_IN_FOCUSED_WINDOW);
 		
 		// RIGHT
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(RIGHT);
-				}
-			}, "right", KeyStroke.getKeyStroke('6'), WHEN_IN_FOCUSED_WINDOW
-		);
+				e -> tick(RIGHT), "right",
+				KeyStroke.getKeyStroke('6'), WHEN_IN_FOCUSED_WINDOW);
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(RIGHT);
-				}
-			}, "right", KeyStroke.getKeyStroke('l'), WHEN_IN_FOCUSED_WINDOW
-		);
-		
-		
+				e -> tick(RIGHT), "right",
+				KeyStroke.getKeyStroke('l'), WHEN_IN_FOCUSED_WINDOW);
+
 		// ROTATE	
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(ROTATE);
-				}
-			}, "rotate", KeyStroke.getKeyStroke('5'), WHEN_IN_FOCUSED_WINDOW
-		);
+				e -> tick(ROTATE), "rotate",
+				KeyStroke.getKeyStroke('5'), WHEN_IN_FOCUSED_WINDOW);
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(ROTATE);
-				}
-			}, "rotate", KeyStroke.getKeyStroke('k'), WHEN_IN_FOCUSED_WINDOW
-		);
-		
+				e -> tick(ROTATE), "rotate",
+				KeyStroke.getKeyStroke('k'), WHEN_IN_FOCUSED_WINDOW);
 		
 		// DROP
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(DROP);
-				}
-			}, "drop", KeyStroke.getKeyStroke('0'), WHEN_IN_FOCUSED_WINDOW
-		);
+				e -> tick(DROP), "drop",
+				KeyStroke.getKeyStroke('0'), WHEN_IN_FOCUSED_WINDOW);
 		registerKeyboardAction(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					tick(DROP);
-				}
-			}, "drop", KeyStroke.getKeyStroke('n'), WHEN_IN_FOCUSED_WINDOW
-		);
-		
+				e -> tick(DROP), "drop",
+				KeyStroke.getKeyStroke('n'), WHEN_IN_FOCUSED_WINDOW);
 		
 		// Create the Timer object and have it send
 		// tick(DOWN) periodically
-		timer = new javax.swing.Timer(DELAY, new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				tick(DOWN);
-			}
-		});
+		timer = new javax.swing.Timer(DELAY, e -> tick(DOWN));
 		
 		requestFocusInWindow(); 
 	}
-	
 
 
 	/**
@@ -249,7 +203,7 @@ public class JTetris extends JComponent {
 		timer.stop();
 		
 		long delta = (System.currentTimeMillis() - startTime)/10;
-		timeLabel.setText(Double.toString(delta/100.0) + " seconds");
+		timeLabel.setText(delta / 100.0 + " seconds");
 
 	}
 	
@@ -288,13 +242,8 @@ public class JTetris extends JComponent {
 	 set in startGame().
 	*/
 	public Piece pickNextPiece() {
-		int pieceNum;
-		
-		pieceNum = (int) (pieces.length * random.nextDouble());
-		
-		Piece piece	 = pieces[pieceNum];
-		
-		return(piece);
+		int pieceNum = (int) (pieces.length * random.nextDouble());
+		return pieces[pieceNum];
 	}
 	
 			
@@ -397,13 +346,12 @@ public class JTetris extends JComponent {
 	}
 
 
-
-		
 	public static final int ROTATE = 0;
 	public static final int LEFT = 1;
 	public static final int RIGHT = 2;
 	public static final int DROP = 3;
 	public static final int DOWN = 4;
+
 	/**
 	 Called to change the position of the current piece.
 	 Each key press calls this once with the verbs
@@ -419,9 +367,7 @@ public class JTetris extends JComponent {
 	public void tick(int verb) {
 		if (!gameOn) return;
 		
-		if (currentPiece != null) {
-			board.undo();	// remove the piece from its old position
-		}
+		if (currentPiece != null) board.undo(); // remove the piece from its old position
 		
 		// Sets the newXXX ivars
 		computeNewPosition(verb);
@@ -429,12 +375,9 @@ public class JTetris extends JComponent {
 		// try out the new position (rolls back if it doesn't work)
 		int result = setCurrent(newPiece, newX, newY);
 		
-//		// if row clearing is going to happen, draw the
-//		// whole board so the green row shows up
-//		if (result ==  Board.PLACE_ROW_FILLED) {
-//			repaint();
-//		}
-
+		// if row clearing is going to happen, draw the
+		// whole board so the green row shows up
+		if (result ==  Board.PLACE_ROW_FILLED) repaint();
 
 		boolean failed = (result >= Board.PLACE_OUT_BOUNDS);
 		
@@ -453,7 +396,6 @@ public class JTetris extends JComponent {
 		*/
 		if (failed && verb==DOWN && !moved) {	// it's landed
 
-			repaint();
 			int cleared = board.clearRows();
 			if (cleared > 0) {
 				// score goes up by 5, 10, 20, 40 for row clearing
@@ -468,23 +410,16 @@ public class JTetris extends JComponent {
 				updateCounters();
 				repaint();	// repaint to show the result of the row clearing
 			}
-			
-			
 			// if the board is too tall, we've lost
-			if (board.getMaxHeight() > board.getHeight() - TOP_SPACE) {
-				stopGame();
-			}
+			if (board.getMaxHeight() > board.getHeight() - TOP_SPACE) stopGame();
 			// Otherwise add a new piece and keep playing
-			else {
-				addNewPiece();
-			}
+			else addNewPiece();
 		}
 		
 		// Note if the player made a successful non-DOWN move --
 		// used to detect if the piece has landed on the next tick()
 		moved = (!failed && verb!=DOWN);
 	}
-
 
 
 	/**
@@ -637,20 +572,12 @@ public class JTetris extends JComponent {
 		// START button
 		startButton = new JButton("Start");
 		panel.add(startButton);
-		startButton.addActionListener( new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				startGame();
-			}
-		});
+		startButton.addActionListener(e -> startGame());
 		
 		// STOP button
 		stopButton = new JButton("Stop");
 		panel.add(stopButton);
-		stopButton.addActionListener( new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				stopGame();
-			}
-		});
+		stopButton.addActionListener(e -> stopGame());
 		
 		enableButtons();
 		
@@ -666,12 +593,8 @@ public class JTetris extends JComponent {
 		row.add(speed);
 		
 		panel.add(row);
-		speed.addChangeListener( new ChangeListener() {
-			// when the slider changes, sync the timer to its value
-			public void stateChanged(ChangeEvent e) {
-				updateTimer();
-			}
-		});
+		// when the slider changes, sync the timer to its value
+		speed.addChangeListener(e -> updateTimer());
 		
 		testButton = new JCheckBox("Test sequence");
 		panel.add(testButton);
@@ -700,11 +623,7 @@ public class JTetris extends JComponent {
 		controls.add(Box.createVerticalStrut(12));
 		JButton quit = new JButton("Quit");
 		controls.add(quit);
-		quit.addActionListener( new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
-			}
-		});
+		quit.addActionListener(e -> System.exit(0));
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();

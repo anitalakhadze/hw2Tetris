@@ -34,10 +34,10 @@ public class Board	{
 	public Board(int width, int height) {
 		this.width = width;
 		this.height = height;
-		board = new boolean[width][height];
+		this.board = new boolean[width][height];
 		committed = true;
 
-		tempBoard = new boolean[width][height];
+		this.tempBoard = new boolean[width][height];
 
 		xBoard = new boolean[width][height];
 		xWidths = new int[height];
@@ -102,7 +102,6 @@ public class Board	{
 					throw  new RuntimeException("Width is not correct in row " + y);
 			}
 		}
-		return;
 	}
 	
 	/**
@@ -120,7 +119,6 @@ public class Board	{
 		for (int i = 0; i < piece.getWidth(); i++) {
 			y = Math.max(heights[x + i] - skirt[i], y);
 		}
-
 		return y;
 	}
 	
@@ -150,19 +148,21 @@ public class Board	{
 		return counter;
 	}
 
-	private boolean inBoundary(int x, int y){
-		return (x < getWidth() && x >= 0) && (y < getHeight() && y >= 0);
+
+	/** returns true if the given x and y are not in boundary */
+	private boolean notInBoundary(int x, int y){
+		return (x >= getWidth() || x < 0) || (y >= getHeight() || y < 0);
 	}
-	
+
+
 	/**
 	 Returns true if the given block is filled in the board.
 	 Blocks outside of the valid width/height area
 	 always return true.
 	*/
 	public boolean getGrid(int x, int y) {
-		if (!inBoundary(x, y)) return true;
-		if (board[x][y]) return true;
-		return false;
+		if (notInBoundary(x, y)) return true;
+		return board[x][y];
 	}
 	
 	
@@ -192,10 +192,9 @@ public class Board	{
 		TPoint[] pieceBody = piece.getBody();
 
 		for (TPoint point : pieceBody){
-			if (!inBoundary(x + point.x, y + point.y)) return PLACE_OUT_BOUNDS;
+			if (notInBoundary(x + point.x, y + point.y)) return PLACE_OUT_BOUNDS;
 			if (xBoard[x + point.x][y + point.y]) return PLACE_BAD;
 		}
-
 
 		boolean rowFilled = false;
 		for (TPoint point : pieceBody){
@@ -212,6 +211,8 @@ public class Board	{
 		return PLACE_OK;
 	}
 
+
+	/** returns true if the specified row is full */
 	private boolean rowIsFull(int row) {
 		for (int col = 0; col < getWidth(); col++) {
 			if(!getGrid(col, row)) return false;
@@ -224,19 +225,19 @@ public class Board	{
 	 things above down. Returns the number of rows cleared.
 	*/
 	public int clearRows() {
-		int[] shiftedWidth = new int[getHeight()];
+		int[] shiftedWidths = new int[getHeight()];
 		int toRow = 0;
 		int rowsCleared = 0;
 		for (int fromRow = 0; fromRow < getHeight(); fromRow++) {
 			if(!rowIsFull(fromRow)){
 				copyRow(tempBoard, fromRow, toRow);
-				shiftedWidth[toRow] = widths[fromRow];
+				shiftedWidths[toRow] = widths[fromRow];
 				toRow++;
 			} else rowsCleared++;
 		}
 
 		this.board = tempBoard;
-		this.widths = shiftedWidth;
+		this.widths = shiftedWidths;
 		for (int col = 0; col < heights.length; col++) {
 			heights[col] = getColumnHeight(col);
 		}
@@ -246,6 +247,7 @@ public class Board	{
 		return rowsCleared;
 	}
 
+	/** Helper method which copies the values from fromRow to toRow on the result board.*/
 	private void copyRow(boolean[][] result, int fromRow, int toRow) {
 		for (int col = 0; col < getWidth(); col++) {
 			result[col][toRow] = board[col][fromRow];
@@ -261,25 +263,19 @@ public class Board	{
 	 See the overview docs.
 	*/
 	public void undo() {
-		restore(xBoard, board, xWidths, widths, xHeights, heights);
-
+		//restore previous situation
+		copyArray(xBoard, board, xWidths, widths, xHeights, heights);
 		committed = true;
 		sanityCheck();
 	}
 
-	private void backup(boolean[][] srcBoard, boolean[][] dstBoard,
-						int[] srcWidths, int[]dstWidths,
-						int[] srcHeights, int[] dstHeights){
-		for (int row = 0; row < getWidth(); row++) {
-			System.arraycopy(srcBoard[row], 0, dstBoard[row], 0, srcBoard[row].length);
-		}
-		System.arraycopy(srcWidths, 0, dstWidths, 0, srcWidths.length);
-		System.arraycopy(srcHeights, 0, dstHeights, 0, srcHeights.length);
-	}
 
-	private void restore(boolean[][] srcBoard, boolean[][] dstBoard,
-						 int[] srcWidths, int[]dstWidths,
-						 int[] srcHeights, int[] dstHeights){
+	/**deep copies the values from specified sources to destinations.
+	 * Used for backup and restore.
+	 */
+	private void copyArray(boolean[][] srcBoard, boolean[][] dstBoard,
+						   int[] srcWidths, int[]dstWidths,
+						   int[] srcHeights, int[] dstHeights){
 		for (int row = 0; row < getWidth(); row++) {
 			System.arraycopy(srcBoard[row], 0, dstBoard[row], 0, srcBoard[row].length);
 		}
@@ -293,7 +289,8 @@ public class Board	{
 	*/
 	public void commit() {
 		committed = true;
-		backup(board, xBoard, widths, xWidths, heights, xHeights);
+		//backup the current situation
+		copyArray(board, xBoard, widths, xWidths, heights, xHeights);
 	}
 
 	/*
@@ -312,8 +309,7 @@ public class Board	{
 			}
 			buff.append("|\n");
 		}
-		for (int x=0; x<width+2; x++)
-			buff.append('-');
+		buff.append("-".repeat(Math.max(0, width + 2)));
 		return(buff.toString());
 	}
 }

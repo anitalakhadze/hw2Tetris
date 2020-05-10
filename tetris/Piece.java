@@ -38,7 +38,7 @@ public class Piece {
 		int maxHeight = 0;
 		int maxWidth = 0;
 		body = Arrays.stream(points)
-				.map(elem -> new TPoint(elem))
+				.map(TPoint::new)
 				.toArray(TPoint[]::new);
 		for (TPoint point : body) {
 			maxWidth = Math.max(point.x, maxWidth);
@@ -51,9 +51,7 @@ public class Piece {
 		Arrays.fill(skirt, Integer.MAX_VALUE);
 
 		for (TPoint point : body) {
-			if (skirt[point.x] > point.y){
-				skirt[point.x] = point.y;
-			}
+			if (skirt[point.x] > point.y) {skirt[point.x] = point.y;}
 		}
 
 		next = null;
@@ -108,15 +106,14 @@ public class Piece {
 	public Piece computeNextRotation() {
 		int delta = height - 1;
 		TPoint[] copy = Arrays.stream(body)
-				.map(elem -> new TPoint(elem))
+				.map(TPoint::new)
 				.toArray(TPoint[]::new);
 		for (TPoint point : copy){
 			int temp = point.y;
 			point.y = point.x;
 			point.x = delta - temp;
 		}
-		Piece newOne = new Piece(copy);
-		return newOne;
+		return new Piece(copy);
 	}
 
 	/**
@@ -215,6 +212,8 @@ public class Piece {
 	 Implementation: uses computeNextRotation()
 	 and Piece.equals() to detect when the rotations have gotten us back
 	 to the first piece.
+
+	 TODO: This could be implemented so that computeNextRotation() is invoked only once.
 	*/
 	private static Piece makeFastRotations(Piece root) {
 		Piece nextPiece = root.computeNextRotation();
@@ -233,7 +232,7 @@ public class Piece {
 	 (Provided code)
 	*/
 	private static TPoint[] parsePoints(String string) {
-		List<TPoint> points = new ArrayList<TPoint>();
+		List<TPoint> points = new ArrayList<>();
 		StringTokenizer tok = new StringTokenizer(string);
 		try {
 			while(tok.hasMoreTokens()) {
@@ -248,8 +247,7 @@ public class Piece {
 		}
 		
 		// Make an array out of the collection
-		TPoint[] array = points.toArray(new TPoint[0]);
-		return array;
+		return points.toArray(new TPoint[0]);
 	}
 
 }

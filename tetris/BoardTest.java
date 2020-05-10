@@ -51,9 +51,9 @@ public class BoardTest {
 		assertEquals(3, b.getColumnHeight(2));
 		assertEquals(4, b.getMaxHeight());
 
-		assertEquals(true, b.getGrid(1, 1));
-		assertEquals(true, b.getGrid(-1, 1));
-		assertEquals(false, b.getGrid(2, 5));
+		assertTrue(b.getGrid(1, 1));
+		assertTrue(b.getGrid(-1, 1));
+		assertFalse(b.getGrid(2, 5));
 
 		assertEquals(1, b.clearRows());
 		assertEquals(3, b.getMaxHeight());
