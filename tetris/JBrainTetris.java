@@ -9,6 +9,8 @@ import java.awt.event.ActionListener;
 
 public class JBrainTetris extends JTetris{
     protected JCheckBox brainMode;
+    protected JSlider adversary;
+    protected JLabel statusLabel;
     private DefaultBrain brain;
     private Brain.Move bestMove;
     private int currentCount;
@@ -23,6 +25,7 @@ public class JBrainTetris extends JTetris{
         super(pixels);
         brain = new DefaultBrain();
         bestMove = new Brain.Move();
+        statusLabel = new JLabel("ok");
         currentCount = super.count;
     }
 
@@ -44,11 +47,40 @@ public class JBrainTetris extends JTetris{
     public JComponent createControlPanel() {
         JComponent panel = super.createControlPanel();
 
-        //added code
         brainMode = new JCheckBox("Brain Active", true);
         panel.add(brainMode);
 
+        JPanel row = new JPanel();
+        panel.add(Box.createVerticalStrut(12));
+        row.add(new JLabel("Adversary:"));
+        adversary = new JSlider(0, 100, 0);	// min, max, current
+        adversary.setPreferredSize(new Dimension(100, 15));
+        row.add(adversary);
+        panel.add(row);
+        panel.add(statusLabel);
         return panel;
+    }
+
+    @Override
+    public Piece pickNextPiece() {
+        int value = adversary.getValue();
+        statusLabel.setText("*ok*");
+        int randNumber = random.nextInt(101);
+        if (randNumber >= value) return super.pickNextPiece();
+        return computeNextWorstPiece();
+    }
+
+    private Piece computeNextWorstPiece(){
+        double worstScore = 0;
+        Piece worstPiece = null;
+        for (Piece piece : pieces){
+            brain.bestMove(board, piece, board.getHeight() - TOP_SPACE, bestMove);
+            if (bestMove.score > worstScore) {
+                worstScore = bestMove.score;
+                worstPiece = bestMove.piece;
+            }
+        }
+        return worstPiece;
     }
 
     @Override
