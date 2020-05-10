@@ -118,7 +118,7 @@ public class Board	{
 		int y = 0;
 		int[] skirt = piece.getSkirt();
 		for (int i = 0; i < piece.getWidth(); i++) {
-			y = Math.max(heights[x + i] + skirt[i], y);
+			y = Math.max(heights[x + i] - skirt[i], y);
 		}
 
 		return y;
