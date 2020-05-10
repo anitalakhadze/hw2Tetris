@@ -11,6 +11,7 @@ public class JBrainTetris extends JTetris{
     protected JCheckBox brainMode;
     private DefaultBrain brain;
     private Brain.Move bestMove;
+    private int currentCount;
 
     /**
      * Creates a new JTetris where each tetris square
@@ -20,8 +21,9 @@ public class JBrainTetris extends JTetris{
      */
     JBrainTetris(int pixels) {
         super(pixels);
-        brain = new BadBrain();
+        brain = new DefaultBrain();
         bestMove = new Brain.Move();
+        currentCount = super.count;
     }
 
     public static void main(String[] args) {
@@ -51,10 +53,16 @@ public class JBrainTetris extends JTetris{
 
     @Override
     public void tick(int verb) {
+
         if (verb == DOWN && brainMode.isSelected() &&
                 (currentY + currentPiece.getHeight() < board.getHeight() - 4)) {
+
             board.undo();
-            brain.bestMove(board, currentPiece, board.getHeight() - 4, bestMove);
+            if (currentCount != super.count){
+                brain.bestMove(board, currentPiece, board.getHeight() - 4, bestMove);
+                currentCount = super.count;
+            }
+
             if (currentPiece != bestMove.piece) super.tick(ROTATE);
             else if (bestMove.x < currentX) super.tick(LEFT);
             else if (bestMove.x > currentX) super.tick(RIGHT);
