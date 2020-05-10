@@ -54,18 +54,21 @@ public class JBrainTetris extends JTetris{
     @Override
     public void tick(int verb) {
 
-        if (verb == DOWN && brainMode.isSelected() &&
-                (currentY + currentPiece.getHeight() < board.getHeight() - 4)) {
+        if (verb == DOWN && brainMode.isSelected()
+//               && (currentY + currentPiece.getHeight() < board.getHeight() - 4)
+        ) {
 
-            board.undo();
             if (currentCount != super.count){
-                brain.bestMove(board, currentPiece, board.getHeight() - 4, bestMove);
+                board.undo();
+                brain.bestMove(board, currentPiece, board.getHeight() - TOP_SPACE, bestMove);
                 currentCount = super.count;
             }
 
             if (currentPiece != bestMove.piece) super.tick(ROTATE);
-            else if (bestMove.x < currentX) super.tick(LEFT);
+
+            if (bestMove.x < currentX) super.tick(LEFT);
             else if (bestMove.x > currentX) super.tick(RIGHT);
+//            else super.tick(DROP);
         }
         super.tick(verb);
     }
